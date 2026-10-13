@@ -1,7 +1,8 @@
 # RockLogik Connect: development plan
 
 **Written:** 13 October 2026
-**Status:** proposed, for review. Nothing is built; the repository holds this plan.
+**Status:** reviewed 13 October 2026; the three questions put to the founder that day are
+answered in §2 (decisions 2 and 5) and §9. Nothing is built; the repository holds this plan.
 **What it is:** the Android app a technician uses in the cab to provision, check and record a
 RockLogik Scout VISR install, over Bluetooth Low Energy, and later to do the same for the Scout
 Sensors. It is built from the outset so that the production unit inherits a provisioning process
@@ -48,12 +49,12 @@ reopen them. It is a technician's tool, used standing next to a truck with the k
 | # | Decision | Why |
 |---|---|---|
 | 1 | **Transport is BLE: JSON-RPC 2.0, newline-delimited, over a Nordic UART Service.** The same protocol Cricket Connect speaks. | It is the only transport that serves both VISR tracks. The Pi 4B has Bluetooth under BlueZ; the MCU companion's nRF52840 is a BLE radio by definition and runs a peripheral service beside its central role for the pucks. A wifi-and-HTTP variant would be easier on the Pi and impossible on the companion. |
-| 2 | **Fresh repository, new package `ca.rocklogik.connect`, with the Bluefruit base and Cricket's JSON-RPC, file-transfer, auth and deployment code brought across file by file**, each listed in a `NOTICE` with its origin and licence. | Bluefruit LE Connect is MIT and travels freely. The CRWN-specific code is CRWN's; see open item 1 in §10 before any of it is copied. A fresh package also drops the Cricket modules that have no VISR equivalent (battery, solar, LoRa, microphone, RF sensor, MQTT, S3 sync, DFU). |
+| 2 | **Fresh repository, new package `ca.rocklogik.connect`. Only the MIT Bluefruit LE Connect base is copied, file by file into `NOTICE`. Everything CRWN-specific in Cricket Connect (the JSON-RPC client, the file-transfer client, the auth and deployment code) is rewritten clean-room from its documented behaviour, not copied.** Decided 13 October 2026. | Bluefruit LE Connect is MIT and travels freely. The CRWN-specific code is CRWN's and this is a RockLogik Technologies repository; a rewrite of the few hundred lines that matter is about a day's work and leaves no title question beside the IP assignment already open in `rocklogik` todo item 1. A fresh package also drops the Cricket modules that have no VISR equivalent (battery, solar, LoRa, microphone, RF sensor, MQTT, S3 sync, DFU). |
 | 3 | **The device-side contract is one file, `docs/protocol.md`, versioned per method, shared by the Pi rig and the MCU firmware.** | The same rule as the notefile contract in `rocklogik-cloud/docs/notes.md`: one place the field names live, and both device tracks implement it. A method the MCU track cannot serve returns a `not_supported` error rather than being absent. |
 | 4 | **Device authentication is a per-unit key, printed as a QR code on the label inside the lid, sent as the first request on every connection.** BLE bonding is a later hardening step, not the POC's gate. | Cricket's `ble_auth_v1` pattern. The cab is a public place; a shared fleet key would be as public as the lid. The QR code means the technician scans rather than types. |
-| 5 | **Backend is `rocklogik-cloud`, Google sign-in exchanged for a Sanctum token, the cortex pattern copied.** | Already built once for cortex and known to work from a phone. `rocklogik-cloud` gains three routes (§7). |
+| 5 | **Backend is `rocklogik-cloud`, Google sign-in exchanged for a Sanctum token, following the cortex pattern from the start.** Decided 13 October 2026 over a per-phone API token. | The pattern is known to work from a phone and the allow-list is the users table, so the second technician costs a row and not a feature. The app side is written fresh (decision 2); the cloud side needs a Google Cloud OAuth client that only the account holder can create (§10). `rocklogik-cloud` gains three routes (§7). |
 | 6 | **Android only for the POC, sideloaded, built in Docker and on CI; no Play Console until there is a second phone.** | The phone on site is the founder's. Cricket's `build.sh` and `Dockerfile` already build without Android Studio. A Play listing is a C$35 one-time fee and a review cycle that buys nothing yet. |
-| 7 | **The SSH path stays.** The wifi access point of POC Decisions §6 and SSH bound to it remain the engineer's path and the lockout fallback; Ethernet behind the bench panel is the last resort. | The app is the technician's path. A device you cannot log into is a device that comes home. |
+| 7 | **The SSH path stays, as the engineer's path and the lockout fallback, not as an install path.** The wifi access point of POC Decisions §6 and SSH bound to it remain; Ethernet behind the bench panel is the last resort. **Every install, the first included, goes through the app** (decided 13 October 2026). | A device you cannot log into is a device that comes home, so the engineer's way in stays. But a procedure exercised from day one is the point of building the app now, so no install is done by hand to save the schedule. |
 | 8 | **Secrets never leave the device by BLE.** Site wifi credentials are write-only; `config_get_v1` returns the SSID and never the passphrase; nothing logs them. | Uplink note §5.1: credentials live on the box, not in Notehub, and not in a phone's log either. |
 | 9 | **The Notecard stays on USB on the Pi rig.** | The UART fallback disables the Pi's Bluetooth to free the PL011 (VISR POC §5.6, amendment of 10 October 2026). This plan is one more reason to make USB work; if UART wins, the Pi rig needs a USB Bluetooth adapter and the plan says so in §8. |
 
@@ -180,9 +181,15 @@ later Bluetooth permissions (`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, with `neverF
 camera for the QR code and photos, no location permission unless scanning requires it on the
 oldest supported release.
 
-**Kept from Cricket:** the BLE scanner and connection stack, the JSON-RPC client with its auth
-retry and ping, the file-transfer client with chunk retry and CRC, Google sign-in and the
-token store, the deployment-details page pattern, the Docker build and lint.
+**Copied from Cricket, under MIT, into `NOTICE`:** the Bluefruit BLE scanner and connection
+stack, and the Docker build and lint scripts (Jordan's own, written for Cricket; confirm they
+carry no CRWN licence header before copying).
+
+**Rewritten clean-room from Cricket's behaviour, not its code:** the JSON-RPC client with auth
+retry and ping, the file-transfer client with chunk retry and CRC, Google sign-in and the token
+store, the deployment-details page. Cricket's `docs/` describe each well enough to rewrite from;
+the rewrite is done without the Cricket source open, and the plan's author notes that in the
+commit.
 
 **Replaced:** every device module (battery, solar, LoRa, microphone, RF, TMD, cycle control,
 health LED) by the five VISR screens in §3. The Cricket "Config Settings" page becomes the
@@ -234,39 +241,38 @@ Cricket enclosure number.
 
 ## 9. Phases, gates and order of work
 
-The first deployment is Kelowna Sand & Gravel, 1 November 2026 to January 2027. Phases 0 and 1
-are aimed at that install, with the SSH path as the fallback if they slip; phase 2 follows during
-the run; phase 3 waits for the pucks and the MCU companion.
+The first deployment is Kelowna Sand & Gravel, 1 November 2026 to January 2027. **Phase 1 is
+a precondition of that install: the install goes through the app or it waits** (decided
+13 October 2026). So gate C-1 is on the critical path to 1 November, and if it slips the
+install date moves rather than the procedure being skipped. Phase 2 follows during the run;
+phase 3 waits for the pucks and the MCU companion.
 
 | Phase | Deliverables | Gate |
 |---|---|---|
-| **0. Bootstrap** (one week) | Repository skeleton; `NOTICE` and the carried-over files under their licences (open item 1 first); package rename; Docker build and a GitHub Actions job producing a debug APK; `docs/protocol.md` v1 with every field named; the dropped modules gone; sign-in against a `rocklogik-cloud` route stub | **C-0:** the APK builds on CI, installs, scans, and authenticates against a Python mock that speaks `protocol.md` |
-| **1. Provision the rig** (two weeks) | `visr-ble` on the Pi: auth, info, status, config, wifi scan; the find, identify, site-network and status screens; bench provisioning script with the QR label; coexistence and throughput measured and recorded | **C-1:** the bench rig is provisioned from the phone, the status page is green, the site passphrase is on the box and not in any log, and BLE holds through the access point coming up |
+| **0. Bootstrap** (one week) | Repository skeleton on the MIT Bluefruit base with `NOTICE`; package `ca.rocklogik.connect`; Docker build and a GitHub Actions job producing a debug APK; `docs/protocol.md` v1 with every field named; the clean-room JSON-RPC client; sign-in against a `rocklogik-cloud` route stub | **C-0:** the APK builds on CI, installs, scans, and authenticates against a Python mock that speaks `protocol.md` |
+| **1. Provision the rig** (two weeks, **before Kelowna**) | `visr-ble` on the Pi: auth, info, status, config, wifi scan; the find, identify, site-network and status screens; bench provisioning script with the QR label; coexistence and throughput measured and recorded; `docs/install.md` first draft | **C-1:** the bench rig is provisioned from the phone, the status page is green, the site passphrase is on the box and not in any log, BLE holds through the access point coming up, and the Kelowna install is rehearsed on the bench from the written procedure |
 | **2. Record the install** (two weeks, during the run) | Recce as a job with file transfer; photos; the three cloud routes; the offline queue; the deployment record end to end | **C-2:** a full dry-run install on the bench, key-on to record in the cloud, in under fifteen minutes, following the written procedure in `docs/install.md` |
 | **3. Pucks and the MCU track** (after the pucks exist) | `puck_list_v1` and `puck_request_v1`; the NUS peripheral on the nRF52840 and the host-side handlers; BLE bonding; release signing | **C-3:** the same APK provisions a Pi rig and an MCU rig, and shows three pucks through either |
 
-Order of work inside phases 0 and 1, each a ticket of a day or less once this plan is approved:
-licence and `NOTICE`; skeleton and build; `protocol.md`; the mock device; scanner and auth;
+Order of work inside phases 0 and 1, each a ticket of a day or less: skeleton, `NOTICE` and
+build; `protocol.md`; the mock device; the clean-room JSON-RPC client; scanner and auth;
 `visr-ble` with info and status; the status screen; config and wifi on the device; the identify
-and site-network screens; the bench script and label; coexistence measurement; the Kelowna
-rehearsal.
+and site-network screens; the bench script and label; coexistence measurement; `install.md`
+and the Kelowna rehearsal. That is roughly thirteen working days against the eighteen between
+this plan and 1 November, alongside the rig's own Notecard bring-up (ROCKLOGIK-53) which the
+status page depends on. Tight, and the decision above says what gives if it does not fit.
 
 ---
 
 ## 10. Open items for the founder
 
-1. **Ownership of the Cricket Connect code.** The Bluefruit base is MIT. The CRWN-specific
-   modules (`ai.crwn.firefly.connect.*`) belong to CRWN, and this is a RockLogik repository.
-   Before a file is copied, settle it one of three ways: a written licence from CRWN to
-   RockLogik Technologies Inc. for the listed files; an assignment; or a clean-room rewrite of
-   the few hundred lines that matter (the JSON-RPC client and the file-transfer client), which
-   is a day's work and may be the cleanest answer given the IP assignment already open in
-   `rocklogik` todo item 1. Decide before phase 0 starts.
+1. ~~Ownership of the Cricket Connect code.~~ Decided 13 October 2026: clean-room rewrite of
+   everything CRWN-specific; only the MIT Bluefruit base is copied (§2 decision 2).
 2. **App name.** "RockLogik Connect" is the working name; it is not a mark and need not be.
 3. **Google Cloud project and OAuth client ids** for `rocklogik-cloud`, which only the account
-   holder can create.
-4. **Whether the first Kelowna install waits for phase 1.** The plan says no: SSH is the
-   fallback and the app is used there if it is ready.
+   holder can create. Needed by the end of phase 0.
+4. ~~Whether the first Kelowna install waits for phase 1.~~ Decided 13 October 2026: it waits
+   (§2 decision 7, §9).
 
 ---
 
@@ -277,7 +283,8 @@ rehearsal.
 | BLE on the Pi 4 is flaky beside the wifi access point and station | Medium | Measured first in phase 1; USB Bluetooth adapter as the fallback, which needs the USB-C port and so needs the Notecard on USB-C's partner, a hub, or the UART after all. Decide on the measurement, not in advance |
 | The Notecard ends up on UART and takes the Pi's Bluetooth with it | Medium | Decision 9; the measurement above is the tie-breaker |
 | The app grows into a dashboard | High if unwatched | §1's last paragraph; every screen is a step in the install or a diagnostic, and a screen that shows trend data is refused |
-| Copying CRWN code without a paper trail | Certain if skipped | Open item 1 is phase 0's first ticket |
+| CRWN code finds its way into the rewrite | Low | The rewrite is done from Cricket's `docs/` with the source closed, and the commit says so; the Bluefruit files in `NOTICE` are the only copies |
+| Phase 1 slips and takes the Kelowna date with it | Medium | Decided and accepted: the install moves. Phase 0 starts the day this plan is approved, and the Notecard bring-up runs in parallel |
 | Android permission and BLE API churn between releases | Low | `minSdk` 26, the modern permission set, one tested phone for the POC |
 | Protocol drift between the two device tracks | Medium | One contract file, a mock that implements it, and the firmware's rule that the overlay and the document are fixed in the same commit applied here to `protocol.md` and the handlers |
 | The fifteen-minute gate fails on people rather than code | Medium | `docs/install.md` is written for the technician, rehearsed on the bench by someone following it cold |

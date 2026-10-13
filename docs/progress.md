@@ -12,3 +12,9 @@ Service as Cricket Connect already speaks, one protocol contract shared by the P
 MCU companion, the bench-and-site split of provisioning, three phases aimed at the Kelowna
 install with SSH as the fallback, and the Cricket code ownership question flagged before any
 file is copied.
+
+Reviewed the same day. Three questions answered by Jordan: the CRWN-specific Cricket code is
+rewritten clean-room and only the MIT Bluefruit base is copied; Google sign-in is built from the
+start rather than a per-phone token; and the Kelowna install waits for phase 1 rather than going
+ahead over SSH, so gate C-1 is on the critical path to 1 November 2026 and the install date moves
+if it slips.
