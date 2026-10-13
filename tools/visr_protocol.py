@@ -518,7 +518,7 @@ def _checks(s: dict, up: float) -> list:
                     f"{st['free_pct']:.0f} % free · read-only root")
     ar = s["archive"]
     c["archive"] = ("ok" if ar["writing"] else "fail",
-                    f"Writing · {ar['segments_pending']} segments pending upload")
+                    f"Writing · {ar['segments_pending']} segment{'' if ar['segments_pending'] == 1 else 's'} pending upload")
     titles = {"can": "CAN bus", "frames": "Frames", "clock": "Clock", "notecard": "Notecard",
               "notehub": "Notehub", "wifi": "Site wifi", "storage": "Storage", "archive": "Archive"}
     return [{"id": k, "state": c[k][0], "title": titles[k], "detail": c[k][1]} for k in CHECK_ORDER]

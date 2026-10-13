@@ -2,6 +2,17 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — First end-to-end run: tablet to mock over BLE (ROCKLOGIK-87)
+
+With LE switched on in this workstation's BlueZ (`ControllerMode = dual`, bluetoothd restarted by
+Jordan), the mock advertised as VISR-MOCK and the Galaxy Tab A found it at -38 dBm, connected,
+negotiated an MTU of 247, unlocked with the typed key, and read `info_v1` and a live `status_v1`
+(all eight checks green against the mock). The engineer terminal showed the traffic with the key
+redacted, and the idle pings every 5 s. The first two connection attempts failed with GATT error
+0x85 (133), the usual Android 7 first-connect failure; the link's two retries covered it, which
+is the reason they are there. Still open in phase 0: CI on GitHub (85, needs a push), sign-in
+(82, 89, 90).
+
 ## 2026-10-13 — Phase 0 built: protocol, mock, client, skeleton (ROCKLOGIK-84 to 89)
 
 - **`docs/protocol.md` v1** (86): transport, the lid label and key, errors, the cross-method rules
