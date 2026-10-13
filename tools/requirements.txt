@@ -1,0 +1,4 @@
+# The mock VISR (BLE peripheral) and the conformance checker (BLE central).
+# conformance.py --direct needs neither.
+bless==0.3.0
+bleak==3.0.2

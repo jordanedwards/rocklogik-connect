@@ -2,6 +2,27 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — Phase 0 built: protocol, mock, client, skeleton (ROCKLOGIK-84 to 89)
+
+- **`docs/protocol.md` v1** (86): transport, the lid label and key, errors, the cross-method rules
+  and every phase 0 to 2 method with its fields. The device computes the status checks, so both
+  tracks and every app version agree on green; the status fields are the heartbeat's where they
+  overlap.
+- **Mock and conformance** (87): `tools/visr_protocol.py` serves the contract with simulated state,
+  `tools/mock_visr.py` puts it behind a Nordic UART Service with bless, `tools/conformance.py`
+  checks any device. Both tracks pass in-process; leaking the passphrase or reordering the checks
+  in the mock fails the checker. Over BLE it has not run: this machine's BlueZ has LE switched off
+  (`ControllerMode = bredr`), so it exposes no GATT server or advertising.
+- **App skeleton and client** (84, 88): Kotlin and Compose, package `ca.rocklogik.connect`,
+  `minSdk` 25 for the Android 7.1.1 tablet, `compileSdk` 37 because current AndroidX requires it.
+  Nothing copied: Nordic's BLE Library replaces the Bluefruit classes the plan named. The RPC client
+  was written from protocol.md; 11 unit tests pass, and disabling redaction fails one. Every
+  wireframe is a destination; Find, Unlock (typed key for now), Unit, Status check and the engineer
+  terminal work, the rest show their ticket. Installed on the tablet, it scans; nothing advertises
+  as a VISR yet.
+- **CI** (85): `build.sh` and the Dockerfile pass lint, tests and the APK in Docker; the GitHub
+  workflow has not run because nothing has been pushed.
+
 ## 2026-10-13 — Repository created; development plan drafted
 
 The decision to build the provisioning app from the outset, rather than after the proof of

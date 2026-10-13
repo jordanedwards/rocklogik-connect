@@ -1,0 +1,22 @@
+RockLogik Connect
+Copyright 2026 RockLogik Technologies Inc.
+
+Copied files
+------------
+None. Every source file in this repository was written for it. The CRWN-specific code in
+Cricket Connect was not copied and was not open while the equivalents here were written
+(Development Plan section 2, decision 2; ROCKLOGIK-84, 88).
+
+Dependencies (fetched at build time, not vendored)
+--------------------------------------------------
+Nordic Semiconductor Android BLE Library (no.nordicsemi.android:ble, ble-ktx)    BSD-3-Clause
+Nordic Semiconductor Android Scanner Compat (no.nordicsemi.android.support.v18)  BSD-3-Clause
+AndroidX, Jetpack Compose, Material 3                                             Apache-2.0
+Kotlin standard library, kotlinx.coroutines                                       Apache-2.0
+JUnit 4 (tests only)                                                              EPL-1.0
+org.json (tests only; Android provides it at runtime)                             Public domain (JSON License text)
+
+Tools (tools/, Python, not shipped in the app)
+-----------------------------------------------
+bless (BLE peripheral for the mock)                                               MIT
+bleak (BLE central for the conformance checker)                                   MIT
