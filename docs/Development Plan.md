@@ -53,7 +53,7 @@ reopen them. It is a technician's tool, used standing next to a truck with the k
 | 3 | **The device-side contract is one file, `docs/protocol.md`, versioned per method, shared by the Pi rig and the MCU firmware.** | The same rule as the notefile contract in `rocklogik-cloud/docs/notes.md`: one place the field names live, and both device tracks implement it. A method the MCU track cannot serve returns a `not_supported` error rather than being absent. |
 | 4 | **Device authentication is a per-unit key, printed as a QR code on the label inside the lid, sent as the first request on every connection.** BLE bonding is a later hardening step, not the POC's gate. | Cricket's `ble_auth_v1` pattern. The cab is a public place; a shared fleet key would be as public as the lid. The QR code means the technician scans rather than types. |
 | 5 | **Backend is `rocklogik-cloud`, Google sign-in exchanged for a Sanctum token, following the cortex pattern from the start.** Decided 13 October 2026 over a per-phone API token. | The pattern is known to work from a phone and the allow-list is the users table, so the second technician costs a row and not a feature. The app side is written fresh (decision 2); the cloud side needs a Google Cloud OAuth client that only the account holder can create (§10). `rocklogik-cloud` gains three routes (§7). |
-| 6 | **Android only for the POC, sideloaded, built in Docker and on CI; no Play Console until there is a second phone.** | The phone on site is the founder's. Cricket's `build.sh` and `Dockerfile` already build without Android Studio. A Play listing is a C$35 one-time fee and a review cycle that buys nothing yet. |
+| 6 | **Android only for the POC, sideloaded, built in Docker and on CI; no Play Console, ever.** | The tablet on site is the founder's. Cricket's `build.sh` and `Dockerfile` already build without Android Studio. |
 | 7 | **The SSH path stays, as the engineer's path and the lockout fallback, not as an install path.** The wifi access point of POC Decisions §6 and SSH bound to it remain; Ethernet behind the bench panel is the last resort. **Every install, the first included, goes through the app** (decided 13 October 2026). | A device you cannot log into is a device that comes home, so the engineer's way in stays. But a procedure exercised from day one is the point of building the app now, so no install is done by hand to save the schedule. |
 | 8 | **Secrets never leave the device by BLE.** Site wifi credentials are write-only; `config_get_v1` returns the SSID and never the passphrase; nothing logs them. | Uplink note §5.1: credentials live on the box, not in Notehub, and not in a phone's log either. |
 | 9 | **The Notecard stays on USB on the Pi rig.** | The UART fallback disables the Pi's Bluetooth to free the PL011 (VISR POC §5.6, amendment of 10 October 2026). This plan is one more reason to make USB work; if UART wins, the Pi rig needs a USB Bluetooth adapter and the plan says so in §8. |
@@ -261,6 +261,17 @@ and site-network screens; the bench script and label; coexistence measurement; `
 and the Kelowna rehearsal. That is roughly thirteen working days against the eighteen between
 this plan and 1 November, alongside the rig's own Notecard bring-up (ROCKLOGIK-53) which the
 status page depends on. Tight, and the decision above says what gives if it does not fit.
+
+---
+
+**Tickets**, created 13 October 2026 on the ROCKLOGIK board in this order: ROCKLOGIK-81
+(wireframe review), 82 (OAuth client ids), 83 (decision record), phase 0 84 to 90, phase 1 91 to
+98, phase 2 99 to 103, phase 3 104 to 106. The board appends new tickets, so phases 0 and 1 sit
+after ROCKLOGIK-78 to 80 (the uplink work); since Kelowna waits for C-1, drag 81 to 98 above
+79 and 80 in the board's manual order.
+
+**Wireframes**: https://claude.ai/artifact/KeRAYAgwoHqSPGRPZMVUet, twelve phone screens, under
+review (ROCKLOGIK-81).
 
 ---
 
