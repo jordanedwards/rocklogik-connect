@@ -2,6 +2,19 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — One debug key for every build (ROCKLOGIK-85, 82)
+
+Google sign-in only works for an APK whose certificate SHA-1 is registered on the Android OAuth
+client, and each machine's own debug keystore has a different one. The project now signs every
+debug build with one key: the founder's existing `~/.android/debug.keystore`, kept so the SHA-1
+already given for ROCKLOGIK-82 stays valid. The keystore lives at `keystore/debug.keystore` and
+is not committed, because the repository is public; CI writes it from the secret
+`DEBUG_KEYSTORE_BASE64` (set 13 October 2026); Docker builds see it through the mounted checkout.
+`keystore/debug.sha1` is committed, and the build checks the certificate against it and stops
+when the key is missing or different. Both failures were provoked and both stopped the build.
+The client secret Google issues with the web client is not used anywhere: the cloud verifies ID
+tokens with the client id and Google's public keys.
+
 ## 2026-10-13 — First end-to-end run: tablet to mock over BLE (ROCKLOGIK-87)
 
 With LE switched on in this workstation's BlueZ (`ControllerMode = dual`, bluetoothd restarted by

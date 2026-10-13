@@ -1,7 +1,15 @@
+import java.security.KeyStore
+import java.security.MessageDigest
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+// One debug key for every machine and CI, so Google sign-in works on any debug build
+// (keystore/README.md). The certificate's SHA-1 must match keystore/debug.sha1.
+val debugKeystore = rootProject.file("keystore/debug.keystore")
+val expectedDebugSha1 = rootProject.file("keystore/debug.sha1").readText().trim().uppercase()
 
 android {
     namespace = "ca.rocklogik.connect"
@@ -17,6 +25,15 @@ android {
         // rocklogik-cloud base URL; the Google web client id arrives with ROCKLOGIK-82.
         buildConfigField("String", "CLOUD_BASE_URL", "\"https://cloud.rocklogik.ca\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"\"")
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            storeFile = debugKeystore
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildFeatures {
@@ -61,3 +78,28 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2")
     testImplementation("org.json:json:20240303") // the real org.json for JVM tests
 }
+
+// Fails the build when the project debug key is missing or is not the one registered with Google.
+val verifyDebugKey by tasks.registering {
+    inputs.files(rootProject.file("keystore/debug.sha1"))
+    doLast {
+        if (!debugKeystore.exists()) {
+            throw GradleException("keystore/debug.keystore is missing: see keystore/README.md")
+        }
+        val store = listOf("PKCS12", "JKS").firstNotNullOfOrNull { type ->
+            runCatching {
+                KeyStore.getInstance(type).apply {
+                    debugKeystore.inputStream().use { load(it, "android".toCharArray()) }
+                }
+            }.getOrNull()
+        } ?: throw GradleException("keystore/debug.keystore cannot be opened with the debug password")
+        val cert = store.getCertificate("androiddebugkey")
+            ?: throw GradleException("keystore/debug.keystore has no androiddebugkey alias")
+        val sha1 = MessageDigest.getInstance("SHA-1").digest(cert.encoded)
+            .joinToString(":") { "%02X".format(it) }
+        if (sha1 != expectedDebugSha1) {
+            throw GradleException("keystore/debug.keystore SHA-1 is $sha1, but keystore/debug.sha1 says $expectedDebugSha1")
+        }
+    }
+}
+tasks.matching { it.name == "preDebugBuild" }.configureEach { dependsOn(verifyDebugKey) }

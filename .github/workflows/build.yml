@@ -18,6 +18,14 @@ jobs:
         with:
           packages: "platforms;android-37.0 build-tools;36.0.0 platform-tools"
       - uses: gradle/actions/setup-gradle@v4
+      - name: Project debug key (keystore/README.md)
+        env:
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$DEBUG_KEYSTORE_BASE64" ]; then
+            echo "::error::DEBUG_KEYSTORE_BASE64 is not set; see keystore/README.md"; exit 1
+          fi
+          echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > keystore/debug.keystore
       - name: Lint, unit tests, debug APK
         run: ./gradlew --console=plain :app:lintDebug :app:testDebugUnitTest :app:assembleDebug
       - uses: actions/upload-artifact@v4

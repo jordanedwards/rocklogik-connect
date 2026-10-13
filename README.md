@@ -13,6 +13,10 @@ VISR. Plan: [docs/Development Plan.md](docs/Development%20Plan.md). Contract wit
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Debug builds need the project debug key in `keystore/debug.keystore`; see
+[keystore/README.md](keystore/README.md). The build stops if it is missing or is not the key whose
+SHA-1 Google sign-in knows.
+
 The app targets Android 7.1 (API 25) and later; the test tablet is a Galaxy Tab A on 7.1.1. On
 Android 11 and earlier, Bluetooth scanning needs Location permission and Location switched on.
 
