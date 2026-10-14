@@ -23,6 +23,7 @@ import ca.rocklogik.connect.ui.theme.RockLogikTheme
  */
 class MainActivity : ComponentActivity() {
     private val vm: ConnectViewModel by viewModels()
+    private val auth: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +34,16 @@ class MainActivity : ComponentActivity() {
                 fun back() { nav.popBackStack() }
                 val chip = { (vm.conn.value as? Conn.Ready)?.name }
 
-                NavHost(nav, startDestination = "signin") {
-                    composable("signin") { SignInScreen(onSignedIn = { go("find") }) }
+                val start = if (auth.state.value is AuthViewModel.State.SignedIn) "find" else "signin"
+                NavHost(nav, startDestination = start) {
+                    composable("signin") {
+                        SignInScreen(auth, onSignedIn = { nav.navigate("find") { popUpTo("signin") { inclusive = true } } })
+                    }
                     composable("find") {
-                        FindScreen(vm, onSignOut = ::back, onPrepare = { go("identify") }, onPicked = { go("unlock") })
+                        FindScreen(vm, onSignOut = {
+                            vm.disconnect(); auth.signOut()
+                            nav.navigate("signin") { popUpTo(0) }
+                        }, onPrepare = { go("identify") }, onPicked = { go("unlock") })
                     }
                     composable("unlock") {
                         UnlockScreen(vm, onBack = ::back, onUnlocked = {

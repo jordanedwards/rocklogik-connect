@@ -32,3 +32,17 @@ tools/.venv/bin/python tools/conformance.py --ble VISR-0001 --key …  # a real 
 The mock's key is `MOCKKEYMOCKKEYMOCKKEYMOCKK`. The mock needs BlueZ with LE enabled: a
 `ControllerMode = bredr` line in `/etc/bluetooth/main.conf` hides the GATT and advertising
 managers it uses. A machine cannot be both the mock and the checker over BLE.
+
+## Sign-in during development
+
+Debug builds sign in against a rocklogik-cloud on this machine at port 8000, reached from the
+tablet with `adb reverse tcp:8000 tcp:8000`; the user must be an active row in that cloud's users
+table. If Google sign-in fails silently, run the debug-only diagnostic, which reports Google's
+numeric status (10: no Android OAuth client matches this package and SHA-1 in the web client's
+project):
+
+```sh
+adb shell am start -n ca.rocklogik.connect/.SignInDiagnosticActivity
+adb logcat -s SignInDiag
+```
+

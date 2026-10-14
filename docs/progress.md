@@ -2,6 +2,34 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — Google sign-in works end to end, against a local cloud (ROCKLOGIK-90)
+
+The app signs in with Google through Credential Manager, exchanges the ID token with
+rocklogik-cloud for its own token, and keeps that encrypted with an Android Keystore key. Signing
+out (the back arrow on Nearby units) revokes the token on the cloud. Proven on the tablet as
+jordan@orchardcity.ca against rocklogik-cloud running on the workstation, reached through
+`adb reverse tcp:8000 tcp:8000`, which is what debug builds point at; release builds point at
+https://cloud.rocklogik.ca, which does not exist yet.
+
+Four things went wrong first, and each one looked like the same silent cancel:
+
+- **One-tap refused** with 16 [28433], "Cannot find a matching credential". The app now uses
+  Google's full account chooser (GetSignInWithGoogleOption), which suits a button anyway.
+- **The OAuth consent screen was Internal,** so only accounts in the owning Workspace could sign
+  in. Now External, in Testing, with test users.
+- **Only an Android OAuth client existed,** and its id had been put where the *web* client id
+  belongs. Google needs both, in one project: the Android client (package and SHA-1) authorises
+  the app; the web client's id is the audience the ID token is issued for and the cloud checks.
+  No redirect URIs or origins on the web client, and its secret is used nowhere.
+- **Credential Manager reports all of these as "cancelled by the user".** A debug-only
+  `SignInDiagnosticActivity` runs Google's legacy sign-in, which gives the numeric status (10 is
+  a client mismatch); it found the third problem in seconds. Debug builds also show the
+  exception text on the Sign in screen.
+
+The cloud's variable is `GOOGLE_WEB_CLIENT_ID`; it had been added as `GOOGLE_CLIENT_ID` and was
+renamed. Locally the cloud runs in the `sail-8.5/app` image under PHP's built-in server against
+`database/local.sqlite` (`artisan serve` hands its workers the Postgres settings from `.env`).
+
 ## 2026-10-13 — One debug key for every build (ROCKLOGIK-85, 82)
 
 Google sign-in only works for an APK whose certificate SHA-1 is registered on the Android OAuth

@@ -22,9 +22,19 @@ android {
         targetSdk = 36 // compile against 37 for AndroidX; target 36 until 37 is tested
         versionCode = 1
         versionName = "0.1.0"
-        // rocklogik-cloud base URL; the Google web client id arrives with ROCKLOGIK-82.
-        buildConfigField("String", "CLOUD_BASE_URL", "\"https://cloud.rocklogik.ca\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"\"")
+        // The Google *web* OAuth client id (ROCKLOGIK-82): the audience of the ID token the cloud
+        // verifies. Not a secret; it ships in every APK. The client secret is not used anywhere.
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"166532415853-jou92o46vjmljddfon98ssvrvcr4argg.apps.googleusercontent.com\"")
+    }
+
+    buildTypes {
+        getByName("debug") {
+            // A local rocklogik-cloud, reached from the tablet through `adb reverse tcp:8000 tcp:8000`.
+            buildConfigField("String", "CLOUD_BASE_URL", "\"http://127.0.0.1:8000\"")
+        }
+        getByName("release") {
+            buildConfigField("String", "CLOUD_BASE_URL", "\"https://cloud.rocklogik.ca\"")
+        }
     }
 
     signingConfigs {
@@ -69,6 +79,13 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
     implementation("androidx.core:core-ktx:1.18.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    // Google sign-in through Credential Manager (works on Android 7 through Play services).
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    // Debug only: the legacy sign-in API, for SignInDiagnosticActivity's numeric status codes.
+    debugImplementation("com.google.android.gms:play-services-auth:21.6.0")
 
     // BLE: Nordic's Android BLE Library and scanner compat, BSD-3-Clause, used as dependencies.
     implementation("no.nordicsemi.android:ble-ktx:2.11.0")

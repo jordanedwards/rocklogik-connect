@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import ca.rocklogik.connect.AuthViewModel
 import ca.rocklogik.connect.BuildConfig
 import ca.rocklogik.connect.ConnectViewModel
 import ca.rocklogik.connect.ConnectViewModel.Conn
@@ -67,8 +68,10 @@ import ca.rocklogik.connect.ui.theme.Rl
 // -- 1 Sign in ------------------------------------------------------------------------------
 
 @Composable
-fun SignInScreen(onSignedIn: () -> Unit) {
-    val configured = BuildConfig.GOOGLE_WEB_CLIENT_ID.isNotEmpty()
+fun SignInScreen(auth: AuthViewModel, onSignedIn: () -> Unit) {
+    val state by auth.state.collectAsState()
+    val activity = LocalContext.current as android.app.Activity
+    LaunchedEffect(state) { if (state is AuthViewModel.State.SignedIn) onSignedIn() }
     Column(Modifier.fillMaxSize().background(Rl.Ink).padding(horizontal = 24.dp, vertical = 32.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
             Text("RockLogik Connect", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp)
@@ -76,13 +79,15 @@ fun SignInScreen(onSignedIn: () -> Unit) {
             Text("Provision, check and record a Scout VISR install from the cab.", color = Color(0xFFC9CCC6), fontSize = 17.sp, lineHeight = 26.sp)
         }
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Primary(if (configured) "Sign in with Google" else "Continue (development build)", onClick = onSignedIn)
+            val s = state
+            if (s is AuthViewModel.State.Failed) Note(s.message, warning = true)
+            Primary(if (s is AuthViewModel.State.Working) "Signing in…" else "Sign in with Google",
+                enabled = auth.configured && s !is AuthViewModel.State.Working) { auth.signIn(activity) }
             Text(
-                if (configured) "Access is by invitation. Your Google account must be on the RockLogik list."
-                else "Google sign-in is not configured in this build (ROCKLOGIK-82, 90). Device features work; nothing is sent to the cloud.",
+                "Access is by invitation. Your Google account must be on the RockLogik list. You stay signed in on this device until you sign out.",
                 color = Color(0xFFB4B8B2), fontSize = 14.sp, lineHeight = 21.sp,
             )
-            Text("Version ${BuildConfig.VERSION_NAME}", color = Color(0xFF8A9095), fontSize = 13.sp)
+            Text("Version ${BuildConfig.VERSION_NAME} · ${BuildConfig.CLOUD_BASE_URL}", color = Color(0xFF8A9095), fontSize = 13.sp)
         }
     }
 }
