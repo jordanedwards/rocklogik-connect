@@ -9,6 +9,7 @@ built and tested before the Pi rig's visr-ble service exists.
     tools/.venv/bin/python tools/mock_visr.py --track mcu     # MCU behaviour: no wifi scan, no recce
     tools/.venv/bin/python tools/mock_visr.py --chunk 240     # bigger notifications once the MTU is 247
     tools/.venv/bin/python tools/mock_visr.py --print-label   # the lid label text, for a QR code
+    tools/.venv/bin/python tools/mock_visr.py --bench-file 100  # recce/bench-100k.bin, for ble_bench.py
 
 Limits of the mock, not of the protocol: bless reports neither the negotiated MTU nor connection
 events. Notifications are therefore cut to --chunk bytes (default 20, which works at any MTU),
@@ -21,6 +22,7 @@ import argparse
 import asyncio
 import json
 import logging
+import os
 import sys
 import time
 
@@ -108,6 +110,11 @@ class Mock:
                  "<from --key>" if self.args.key != MOCK_KEY else MOCK_KEY)
         log.info("lid label: %s", lid_label(self.args.serial, self.args.key))
         log.info("workdir %s", self.device.workdir)
+        if self.args.bench_file:
+            path = os.path.join(self.device.workdir, "recce", f"bench-{self.args.bench_file}k.bin")
+            with open(path, "wb") as f:
+                f.write(os.urandom(self.args.bench_file * 1024))
+            log.info("bench file recce/%s", os.path.basename(path))
         await self.sender()
 
 
@@ -122,6 +129,8 @@ def main():
     p.add_argument("--time-scale", type=float, default=1.0,
                    help="simulated seconds per real second (60 makes a 15-minute recce take 15 s)")
     p.add_argument("--print-label", action="store_true")
+    p.add_argument("--bench-file", type=int, default=0, metavar="KB",
+                   help="write KB random bytes to recce/bench-<KB>k.bin, for ble_bench.py")
     args = p.parse_args()
     if args.print_label:
         print(lid_label(args.serial, args.key))

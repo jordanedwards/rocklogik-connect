@@ -1,6 +1,7 @@
 package ca.rocklogik.connect.rpc
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -121,7 +122,17 @@ class RpcClient(
         try {
             val text = req.toString()
             log(Direction.OUT, Redact.json(text))
-            writeLock.withLock { link.write((text + "\n").toByteArray(Charsets.UTF_8)) }
+            try {
+                writeLock.withLock { link.write((text + "\n").toByteArray(Charsets.UTF_8)) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // A write that fails (Nordic's RequestFailedException when the peripheral has
+                // gone) means the link is gone; callers handle RpcException, nothing else.
+                val closed = RpcException(0, RpcException.LINK_CLOSED, "write failed: ${e.message}")
+                failAll(closed)
+                throw closed
+            }
             activity = true
             val reply = try {
                 withTimeout(timeoutMs) { waiter.await() }

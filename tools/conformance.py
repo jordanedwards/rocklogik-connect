@@ -95,6 +95,10 @@ class BleLink:
         self.client = BleakClient(dev)
         await self.client.connect()
         await self.client.start_notify(NUS_TX, self._notify)
+        # BlueZ negotiates the MTU on connect, but bleak reports 23 until asked for it.
+        acquire = getattr(self.client._backend, "_acquire_mtu", None)
+        if acquire:
+            await acquire()
         self.mtu = self.client.mtu_size
 
     def _notify(self, _, data: bytearray):

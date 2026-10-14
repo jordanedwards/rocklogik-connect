@@ -23,10 +23,12 @@ private class FakeLink : ByteLink {
     val written = mutableListOf<JSONObject>()
     private val partial = StringBuilder()
     var onRequest: (JSONObject) -> List<String> = { emptyList() }
+    var writeFails: Exception? = null
 
     override val incoming: Flow<ByteArray> = toPhone.consumeAsFlow()
 
     override suspend fun write(bytes: ByteArray) {
+        writeFails?.let { throw it }
         partial.append(String(bytes, Charsets.UTF_8))
         while (true) {
             val nl = partial.indexOf("\n")
@@ -160,6 +162,21 @@ class RpcClientTest {
         assertFalse(all.contains("MOCKKEYMOCKKEYMOCKKEYMOCKK"))
         assertFalse(all.contains("hunter2-secret"))
         assertTrue(all.contains("<redacted>"))
+    }
+
+    @Test
+    fun failedWriteBecomesLinkClosed() = runTest {
+        // The tablet crashed on 13 October 2026 when the mock VISR went away mid-poll: the BLE
+        // library's write exception was not an RpcException and escaped every caller.
+        val link = FakeLink()
+        val c = client(link, ping = 1_000)
+        link.writeFails = IllegalStateException("Request failed with status 1")
+        val e = runCatching { c.call("status_v1") }.exceptionOrNull()
+        assertTrue(e is RpcException && e.name == RpcException.LINK_CLOSED)
+        assertFalse(c.alive.value)
+        advanceTimeBy(10_000) // the ping loop must not throw either
+        runCurrent()
+        c.close()
     }
 
     @Test
