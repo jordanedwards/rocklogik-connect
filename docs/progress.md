@@ -2,6 +2,28 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — Bluetooth beside the Pi's wifi: measured, and enough (ROCKLOGIK-91, part)
+
+Numbers and the decision are in the Development Plan section 5.1: no drops and a 100 KB file in
+5 to 6 s in every radio state, including access point and station together under a sustained
+download, so the rig keeps its on-board radio. The ticket stays open for one re-run of the worst
+state with the Notecard on USB and the box closed.
+
+Learned on the way, none of it visible in the diff:
+
+- **The app crashed when a VISR vanished mid-poll.** Nordic's library throws its own exception for
+  a failed write, and nothing above `RpcClient` caught anything but `RpcException`. Fixed in
+  7724f18; a failed write is now `link_closed`.
+- **A workstation that has run the bless mock can stop connecting as a central.** bleak found
+  VISR-BENCH and timed out on every connect; a trace on the Pi showed no connection request ever
+  arrived. Powering the workstation's adapter off and on (`bluetoothctl power off`, then `on`)
+  cleared it. The tablet connected throughout.
+- **bleak reports MTU 23 on BlueZ until asked**, so the checker wrote in 20-byte pieces. The link
+  now reads the negotiated MTU (517 to the Pi).
+- **The bench Pi's radios were soft-blocked** (the OS default until set up) and its RTC had probed
+  at boot before it was wired. Both now work; the RTC was set from NTP and reported low voltage
+  on first read, so whether it has a backup cell is worth a look.
+
 ## 2026-10-13 — Sign-in works against the deployed cloud (ROCKLOGIK-89)
 
 A debug build pointed at https://cloud.rocklogik.ca signed in on the tablet as

@@ -163,6 +163,36 @@ Three things to prove early, because each can sink the transport:
   560 KB a minute; the Pi will differ. A 100 KB recce report must arrive in under a minute.
 - **The Notecard on USB** (decision 9).
 
+**Measured 13 October 2026 (ROCKLOGIK-91): the on-board radio is enough; no USB Bluetooth
+adapter.** The mock (`tools/mock_visr.py --bench-file 100`) ran on the bench Pi 4 (BlueZ 5.82,
+Raspberry Pi OS trixie), and `tools/ble_bench.py` on the workstation timed 100 pings and fetched
+a 100 KB file with `file_receive_v1` in 4 KB chunks, checked against the whole-file CRC. MTU 517.
+Raw results are in [measurements/2026-10-13-ble-coexistence.jsonl](measurements/2026-10-13-ble-coexistence.jsonl).
+
+| Radio state | Pings dropped | Median / max round trip | 100 KB |
+| --- | --- | --- | --- |
+| Wifi off | 0 of 100 | 90 / 137 ms | 5.6 s |
+| Service access point up (2.4 GHz channel 6, no client) | 0 of 100 | 90 / 135 ms | 5.6 to 6.0 s |
+| Station associated (2.4 GHz channel 3), idle | 0 of 100 | 90 / 135 ms | 5.6 to 5.8 s |
+| Station downloading at 3.8 to 5.6 MB/s | 0 of 100 | 90 / 136 ms | 5.2 to 5.3 s |
+| Both: access point on 2.4 GHz, station on 5 GHz, downloading | 0 of 100 | 90 / 135 ms | 5.3 to 6.0 s |
+| Both on 2.4 GHz channel 3, station downloading | 0 of 100 | 90 / 135 ms | 5.0 s |
+
+The 90 ms floor is the workstation's connection interval, not the Pi: the tablet's pings to the
+same mock came back in 3 to 5 ms. The worst case is about a tenth of the one-minute budget.
+
+What the measurement found besides the numbers:
+
+- **Access point and station together need one channel, or the chip time-shares two.** The Pi
+  runs both through a second virtual interface (`iw dev wlan0 interface add uap0 type __ap`). When
+  the access point came up, the station band-steered to the site's 5 GHz radio, and its own
+  round trip went from a steady 23 ms to between 25 ms and 2 s while it settled. Bluetooth did
+  not notice. `visr-ble` should start the access point on the station's current channel, and
+  move it when the station roams.
+- **Not covered here, and still to do:** the Notecard on USB beside all of this (the bench Pi is
+  being moved to GPIO power first), the PETG enclosure closed, and a client joined to the access
+  point and moving data. The worst state is re-run with those when the Notecard is on.
+
 ### 5.2 The MCU track (`rocklogik-firmware`)
 
 The nRF52840 companion runs the Nordic UART Service as a peripheral alongside its central role,
