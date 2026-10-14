@@ -46,6 +46,8 @@ class CloudApi(private val baseUrl: String = BuildConfig.CLOUD_BASE_URL) {
             val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
             status to (if (text.isBlank()) null else runCatching { JSONObject(text) }.getOrNull())
         } catch (e: IOException) {
+            // The cause (DNS, TLS, timeout) is what tells a bad network from a bad server.
+            android.util.Log.w("CloudApi", "POST $path to $baseUrl failed", e)
             throw Refused("unreachable", 0)
         } finally {
             c.disconnect()

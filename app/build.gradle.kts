@@ -11,6 +11,10 @@ plugins {
 val debugKeystore = rootProject.file("keystore/debug.keystore")
 val expectedDebugSha1 = rootProject.file("keystore/debug.sha1").readText().trim().uppercase()
 
+// Debug builds use a rocklogik-cloud on this machine unless told otherwise: `-PcloudBaseUrl=...`,
+// or `CLOUD=https://cloud.rocklogik.ca ./build.sh apk` to sign in against the deployed one.
+val debugCloudBaseUrl = providers.gradleProperty("cloudBaseUrl").getOrElse("http://127.0.0.1:8000")
+
 android {
     namespace = "ca.rocklogik.connect"
     compileSdk = 37
@@ -29,8 +33,8 @@ android {
 
     buildTypes {
         getByName("debug") {
-            // A local rocklogik-cloud, reached from the tablet through `adb reverse tcp:8000 tcp:8000`.
-            buildConfigField("String", "CLOUD_BASE_URL", "\"http://127.0.0.1:8000\"")
+            // By default a local rocklogik-cloud, reached from the tablet through `adb reverse tcp:8000 tcp:8000`.
+            buildConfigField("String", "CLOUD_BASE_URL", "\"$debugCloudBaseUrl\"")
         }
         getByName("release") {
             buildConfigField("String", "CLOUD_BASE_URL", "\"https://cloud.rocklogik.ca\"")

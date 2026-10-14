@@ -2,6 +2,25 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — Sign-in works against the deployed cloud (ROCKLOGIK-89)
+
+A debug build pointed at https://cloud.rocklogik.ca signed in on the tablet as
+jordan@orchardcity.ca, after Jordan added that account to the droplet's users table with tinker.
+Debug builds still default to the local cloud; `CLOUD=... ./build.sh apk` (Gradle property
+`cloudBaseUrl`) points one elsewhere. Release builds already pointed at the droplet.
+
+The first attempt failed with "RockLogik cannot be reached", and it was not the network. The
+app now logs the exception behind that message, which was `ProtocolException: Too many
+follow-up requests: 21`, a redirect loop. `cloud.rocklogik.ca` had been created proxied in
+Cloudflare, whose Flexible SSL mode fetches the origin over plain HTTP, which nginx redirects to
+HTTPS, which Cloudflare fetches over HTTP again. The workstation never saw it because its resolver
+still held an older answer pointing straight at the droplet, so every check from here passed.
+Jordan set the record to DNS only. It should stay that way: the droplet terminates TLS with its
+own certificate, and the hostname serves the app and Notehub, not browsers, so Cloudflare's
+proxy adds a firewall that reads request bodies and nothing this host needs. The Android 7.1.1
+tablet trusts the droplet's Let's Encrypt chain (it carries ISRG Root X1), which was checked on
+the way.
+
 ## 2026-10-13 — Phase 0 done: gate C-0 passed (todo items 1 and 2)
 
 The CI-built APK, signed with the project debug key, installed on the tablet, signed in as

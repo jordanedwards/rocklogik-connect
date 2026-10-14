@@ -36,8 +36,9 @@ managers it uses. A machine cannot be both the mock and the checker over BLE.
 ## Sign-in during development
 
 Debug builds sign in against a rocklogik-cloud on this machine at port 8000, reached from the
-tablet with `adb reverse tcp:8000 tcp:8000`; the user must be an active row in that cloud's users
-table. If Google sign-in fails silently, run the debug-only diagnostic, which reports Google's
+tablet with `adb reverse tcp:8000 tcp:8000`. `CLOUD=https://cloud.rocklogik.ca ./build.sh apk`
+builds one that signs in against the deployed cloud instead. Either way the user must be an active
+row in that cloud's users table. If Google sign-in fails silently, run the debug-only diagnostic, which reports Google's
 numeric status (10: no Android OAuth client matches this package and SHA-1 in the web client's
 project):
 
