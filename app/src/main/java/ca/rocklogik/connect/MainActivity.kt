@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val start = if (auth.state.value is AuthViewModel.State.SignedIn) "find" else "signin"
         setContent {
             RockLogikTheme {
                 val nav = rememberNavController()
@@ -34,7 +35,6 @@ class MainActivity : ComponentActivity() {
                 fun back() { nav.popBackStack() }
                 val chip = { (vm.conn.value as? Conn.Ready)?.name }
 
-                val start = if (auth.state.value is AuthViewModel.State.SignedIn) "find" else "signin"
                 NavHost(nav, startDestination = start) {
                     composable("signin") {
                         SignInScreen(auth, onSignedIn = { nav.navigate("find") { popUpTo("signin") { inclusive = true } } })

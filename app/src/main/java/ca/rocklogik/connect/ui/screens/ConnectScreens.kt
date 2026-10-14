@@ -70,7 +70,7 @@ import ca.rocklogik.connect.ui.theme.Rl
 @Composable
 fun SignInScreen(auth: AuthViewModel, onSignedIn: () -> Unit) {
     val state by auth.state.collectAsState()
-    val activity = LocalContext.current as android.app.Activity
+    val activity = androidx.activity.compose.LocalActivity.current ?: return
     LaunchedEffect(state) { if (state is AuthViewModel.State.SignedIn) onSignedIn() }
     Column(Modifier.fillMaxSize().background(Rl.Ink).padding(horizontal = 24.dp, vertical = 32.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
