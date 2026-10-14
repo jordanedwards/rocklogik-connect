@@ -2,6 +2,15 @@
 
 Completed work, newest first. Items arrive here from [todo.md](todo.md) when they are finished.
 
+## 2026-10-13 — Phase 0 done: gate C-0 passed (todo items 1 and 2)
+
+The CI-built APK, signed with the project debug key, installed on the tablet, signed in as
+jordan@orchardcity.ca through Google to a local rocklogik-cloud, found VISR-MOCK, unlocked and
+read `info_v1` (ROCKLOGIK-90). The OAuth clients exist (ROCKLOGIK-82, Jordan). One check from
+phase 0 stays open on the board: exchanging a token on the droplet (ROCKLOGIK-89), which waits on
+rocklogik-cloud being deployed at all (its todo item 1). Phase 1 is next and the Kelowna install
+waits on its gate.
+
 ## 2026-10-13 — Google sign-in works end to end, against a local cloud (ROCKLOGIK-90)
 
 The app signs in with Google through Credential Manager, exchanges the ID token with
