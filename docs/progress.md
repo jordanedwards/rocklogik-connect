@@ -20,9 +20,8 @@ Learned on the way, none of it visible in the diff:
   cleared it. The tablet connected throughout.
 - **bleak reports MTU 23 on BlueZ until asked**, so the checker wrote in 20-byte pieces. The link
   now reads the negotiated MTU (517 to the Pi).
-- **The bench Pi's radios were soft-blocked** (the OS default until set up) and its RTC had probed
-  at boot before it was wired. Both now work; the RTC was set from NTP and reported low voltage
-  on first read, so whether it has a backup cell is worth a look.
+- **The bench Pi's radios were soft-blocked** (the OS default until set up). What was changed on
+  the Pi by hand is recorded in rocklogik-firefly-rpi, `docs/evidence/ble-coexistence/2026-10-13/`.
 
 ## 2026-10-13 — Sign-in works against the deployed cloud (ROCKLOGIK-89)
 
